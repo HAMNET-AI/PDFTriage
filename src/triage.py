@@ -3,7 +3,6 @@ from llama_index.llms import OpenAI
 import os
 import json
 from llama_index.indices.struct_store import JSONQueryEngine
-os.environ["OPENAI_API_KEY"] = "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"
 llm = OpenAI()
 dataschema = {
     "description": "data is a structured data book derived from a pdf",

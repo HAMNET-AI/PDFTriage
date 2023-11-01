@@ -2,7 +2,6 @@ from src.routers import router
 import os,json
 os.environ["http_proxy"] = "http://127.0.0.1:7890"
 os.environ["https_proxy"] = "http://127.0.0.1:7890"
-os.environ["OPENAI_API_KEY"] = "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"
 if __name__ == '__main__':
     query = "Can you summarize the key takeaways from pages 5-7?"
     router(query=query)

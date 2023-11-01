@@ -4,7 +4,6 @@ import os
 from .triage import fetch_figure,fetch_pages,fetch_sections,fetch_table,retrieve
 os.environ["http_proxy"] = "http://127.0.0.1:7890"
 os.environ["https_proxy"] = "http://127.0.0.1:7890"
-os.environ["OPENAI_API_KEY"] = "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"
 def router(query):
     choices = [
         ToolMetadata(description="Get the text contained in the pages listed", name="fetch_pages"),
