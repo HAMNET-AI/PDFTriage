@@ -2,8 +2,6 @@ from llama_index.tools import ToolMetadata
 from llama_index.selectors.llm_selectors import LLMSingleSelector
 import os
 from .triage import fetch_figure,fetch_pages,fetch_sections,fetch_table,retrieve
-os.environ["http_proxy"] = "http://127.0.0.1:7890"
-os.environ["https_proxy"] = "http://127.0.0.1:7890"
 def router(query):
     choices = [
         ToolMetadata(description="Get the text contained in the pages listed", name="fetch_pages"),
@@ -22,7 +20,8 @@ def router(query):
     flag = result[0].index
     print(flag)
     if flag == 0:
-        fetch_pages(query=query)
+        print("fetch_pages")
+        # fetch_pages(query=query)
     elif flag == 1:
         fetch_sections()
     elif flag == 2:

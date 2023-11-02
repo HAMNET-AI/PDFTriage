@@ -1,6 +1,5 @@
 from llama_index.indices.service_context import ServiceContext
 from llama_index.llms import OpenAI
-import os
 import json
 from jsonpath_ng import jsonpath
 from jsonpath_ng.ext import parse
