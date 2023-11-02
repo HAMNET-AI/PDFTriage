@@ -1,7 +1,5 @@
 from llama_index.indices.service_context import ServiceContext
 from llama_index.llms import OpenAI
-import os
-import json
 from llama_index.indices.struct_store import JSONQueryEngine
 llm = OpenAI()
 dataschema = {
