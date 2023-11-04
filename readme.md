@@ -1,6 +1,6 @@
 ## PDFTriage: Question Answering over Long, Structured Documents
 
-## system metadata
+## metadata
 
 system message:
 ```
