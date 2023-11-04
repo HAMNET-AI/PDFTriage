@@ -1,93 +1,174 @@
 from llama_index.indices.service_context import ServiceContext
 from llama_index.llms import OpenAI
-import json
-from jsonpath_ng import jsonpath
+import httpx
+import json,ast
+from jsonpath_ng import jsonpath, parse
 from jsonpath_ng.ext import parse
 from .myJSONQueryEngine import JSONQueryEngine
-llm = OpenAI()
+from dotenv import load_dotenv
+import os
+load_dotenv(override=True)
 dataschema = {
-    "description": "data is a structured data book derived from a pdf",
-    "type": "object",
-    "properties": {
-        "headers": {
-            "description": "List of contents of each page of the pdf",
+  "description": "This is a request reply containing a parsed pdf file",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "integer"
+    },
+    "data": {
+      "description": "data is a structured data book derived from a pdf",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "List of contents of each page of the pdf",
+        "properties": {
+          "page": {
+            "description": "Page number of each page",
+            "type": "integer"
+          },
+          "width": {
+            "description": " Width of each page",
+            "type": "integer"
+          },
+          "height": {
+            "description": " Each page of the high",
+            "type": "integer"
+          },
+          "boxes": {
+            "description": "Content block of each page",
             "type": "array",
             "items": {
-                "type": "object",
-                "properties": {
-                    "page": {
-                        "description": "Page number per pdf page",
-                        "type": "integer",
-                    },
-                    "bbox": {
-                        "description": "Bounding box coordinates of the text",
-                        "type": "array",
-                    },
-                    "text": {
-                        "description":
-                            "Content of the actual text",
-                        "type": "string",
-                    },
-                    "type": {
-                        "description":
-                            "Structural hierarchy of the text",
-                        "type": "string",
-                    },
-                    "contain_formula": {
-                        "description":
-                            "Whether the text contains mathematical formulae",
-                        "type": "bool",
-                    },
-                    "font_size": {
-                        "description":
-                            "Font size of text",
-                        "type": "float",
-                    },
-                    "font_name": {
-                        "description":
-                            "Font name for text",
-                        "type": "string",
-                    },
-                    "children": {
-                        "description":
-                            "Child elements of text",
-                        "type": "object",
-                    },
-
+              "type": "object",
+              "properties": {
+                "bbox": {
+                  "description": "Bounding box coordinates of the text",
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
                 },
-                "required": ["page", "bbox", "text", "type", "contain_formula", "font_size", "font_name","children"],
-            },
+                "text": {
+                  "description":"Content of the block",
+                  "type": "string"
+                },
+                "type": {
+                  "description":"type of the block",
+                  "type": "string"
+                },
+                "index": {
+                  "type": "integer"
+                },
+                "score": {
+                  "type": "number"
+                },
+                "contain_formula": {
+                  "description":"Whether the text contains mathematical formulae",
+                  "type": "boolean"
+                },
+                "font_size": {
+                  "description":"Font size of text",
+                  "type": "number"
+                },
+                "font_name": {
+                  "description":"Font name for text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "bbox",
+                "text",
+                "type",
+                "index",
+                "score",
+                "contain_formula",
+                "font_size",
+                "font_name"
+              ]
+            }
+          }
         },
+        "required": [
+          "page",
+          "width",
+          "height",
+          "boxes"
+        ]
+      }
     },
-    "required": ["headers"]
+      "msg": {
+        "type": "string"
+      }
+    },
+  "required": [
+    "code",
+    "data",
+    "msg"
+  ]
 }
+llm = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 service_context = ServiceContext.from_defaults(llm=llm)
+with open('F:\code\python\PDFTriage\PDFTriage\data\pdf.json', encoding="utf-8") as pdfdata:
+    data = json.load(pdfdata)
+query_engine = JSONQueryEngine(
+    json_value=data,
+    json_schema=dataschema,
+    service_context=service_context,
+    synthesize_response=False,
+)
 def fetch_pages(query):
     #print("pages")
-    with open('F:\code\python\PDFTriage\PDFTriage\data\pdf.json',encoding="utf-8") as pdfdata:
-        datapdf = pdfdata.read()
-    alldata = json.loads(datapdf)
-    data = alldata["data"]
-    query_engine = JSONQueryEngine(
-        json_value=data,
-        json_schema=dataschema,
-        service_context=service_context,
-        synthesize_response=False,
-    )
     query_prompt= f"What contents to the number of pages mentioned in this question : {query}"
-    #print(query_prompt)
-    josnpath = query_engine.query(query_prompt).metadata['json_path_response_str'].replace("&&", "&")
-    jsonpath_expr = parse(josnpath)
-    matches = [match.value for match in jsonpath_expr.find(data)]
-    print(matches)
-def fetch_sections():
-    print("Fetching sections")
-
+    path = query_engine.query(query_prompt).metadata['json_path_response_str'].replace("&&", "&")
+    #path = "$.data[?(@.page >= 5 & @.page <= 7)].boxes[*].text"
+    #.replace("&&", "&")
+    jsonpath_expression = parse(path)
+    matches = jsonpath_expression.find(data)
+    result = [match.value for match in matches]
+    print(result)
+def fetch_sections(query):
+  print("Fetching sections")
 def fetch_figure():
     print("Fetching figure")
 
-def fetch_table():
-    print("fetch_table")
-
+def get_table_num(query):
+  prompt = f"""Please indicate in an array form which tables are referred to in a question
+              example:
+              query : What is the summary of the contents of table 1
+              output : [1]
+              query : What is the summary of the contents of table 2 and 6" \
+              output : [2,6]
+              query : What is the summary of the contents of table 2 to 5" \
+              output : [2,3,4,5]
+              --------------------------------------------------------------\
+              this is the question {query} Please indicate in an array form which tables are referred
+  """
+  url = 'https://openai.forkway.cn/v1/chat/completions'
+  headers = {
+    'api-key': os.environ.get("API_KEY"),
+    'Content-Type': 'application/json'
+  }
+  body = {
+    'model' : "gpt-3.5-turbo",
+    'messages': [{
+      'role': 'user',
+      'content': prompt
+    }],
+    'temperature': 0
+  }
+  result = httpx.post(url, data=json.dumps(body), headers=headers, timeout=600).json()
+  return result['choices'][0]['message']['content']
+def fetch_table(query):
+  query_prompt = f"What contents mentioned in the table of this pdf"
+  path = query_engine.query(query_prompt).metadata['json_path_response_str'].replace("&&", "&")
+  # path = "$.data[?(@.page >= 5 & @.page <= 7)].boxes[*].text"
+  # .replace("&&", "&")
+  jsonpath_expression = parse(path)
+  matches = jsonpath_expression.find(data)
+  result = [match.value for match in matches]
+  table_indexs = get_table_num(query)
+  table_indexs = ast.literal_eval(table_indexs)
+  ans = [result[i] for i in table_indexs]
+  print(ans)
 def retrieve():
     print("retrieve")

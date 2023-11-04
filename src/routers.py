@@ -15,19 +15,17 @@ def router(query):
     # choices as a list of strings
     #choices = ["fetch_pages", "fetch_sections", "fetch_figure", "fetch_table", "retrieve"]
     selector = LLMSingleSelector.from_defaults()
-    print("router")
     result = selector.select(choices, query=query).selections
     flag = result[0].index
-    print(flag)
+    #print(flag)
     if flag == 0:
-        print("fetch_pages")
-        # fetch_pages(query=query)
+        fetch_pages(query=query)
     elif flag == 1:
         fetch_sections()
     elif flag == 2:
         fetch_figure()
     elif flag == 3:
-        fetch_table()
+        fetch_table(query=query)
     elif flag == 4:
         retrieve()
     else:
