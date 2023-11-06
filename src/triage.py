@@ -1,5 +1,6 @@
 from llama_index.indices.service_context import ServiceContext
 from llama_index.llms import OpenAI
+from llama_index.llms import AzureOpenAI
 import httpx
 import json,ast
 from jsonpath_ng import jsonpath, parse
@@ -106,7 +107,7 @@ dataschema = {
     "msg"
   ]
 }
-llm = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+llm = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),api_base=os.environ.get("OPENAI_API_BASE"))
 service_context = ServiceContext.from_defaults(llm=llm)
 with open('F:\code\python\PDFTriage\PDFTriage\data\pdf.json', encoding="utf-8") as pdfdata:
     data = json.load(pdfdata)
@@ -124,8 +125,10 @@ def fetch_pages(query):
     #.replace("&&", "&")
     jsonpath_expression = parse(path)
     matches = jsonpath_expression.find(data)
-    result = [match.value for match in matches]
-    print(result)
+    content = [match.value for match in matches]
+    prompt = f"Please answer a question based on something in the pdf\n, this is the question{query}\n, The contents of the pages mentioned in the question are listed in text as follows {content}"
+    response = llm.complete(prompt)
+    print(response)
 def fetch_sections(query):
   print("Fetching sections")
 def fetch_figure():
@@ -143,32 +146,27 @@ def get_table_num(query):
               --------------------------------------------------------------\
               this is the question {query} Please indicate in an array form which tables are referred
   """
-  url = 'https://openai.forkway.cn/v1/chat/completions'
-  headers = {
-    'api-key': os.environ.get("API_KEY"),
-    'Content-Type': 'application/json'
-  }
-  body = {
-    'model' : "gpt-3.5-turbo",
-    'messages': [{
-      'role': 'user',
-      'content': prompt
-    }],
-    'temperature': 0
-  }
-  result = httpx.post(url, data=json.dumps(body), headers=headers, timeout=600).json()
-  return result['choices'][0]['message']['content']
+  response = llm.complete(prompt)
+  print("num")
+  return response.__str__()
 def fetch_table(query):
   query_prompt = f"What contents mentioned in the table of this pdf"
   path = query_engine.query(query_prompt).metadata['json_path_response_str'].replace("&&", "&")
-  # path = "$.data[?(@.page >= 5 & @.page <= 7)].boxes[*].text"
-  # .replace("&&", "&")
   jsonpath_expression = parse(path)
   matches = jsonpath_expression.find(data)
   result = [match.value for match in matches]
+  print("table")
   table_indexs = get_table_num(query)
   table_indexs = ast.literal_eval(table_indexs)
-  ans = [result[i] for i in table_indexs]
-  print(ans)
+  #content = [result[i] for i in table_indexs]
+  content = [f'table{i}:{result[i]}' for i in table_indexs]
+  prompt = f"Please answer a question based on something in the pdf\n, this is the question{query}\n, The contents of  tables, mentioned in the question are listed in text as follows {content}"
+  response = llm.complete(prompt)
+  print(response)
 def retrieve():
     print("retrieve")
+
+
+def pdf_response(query,content):
+  print("response")
+
