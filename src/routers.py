@@ -17,7 +17,6 @@ def router(query):
     selector = LLMSingleSelector.from_defaults()
     result = selector.select(choices, query=query).selections
     flag = result[0].index
-    print(flag)
     if flag == 0:
         content = fetch_pages(query=query)
     elif flag == 1:

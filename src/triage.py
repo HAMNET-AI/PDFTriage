@@ -110,7 +110,7 @@ dataschema = {
 }
 llm = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),api_base=os.environ.get("OPENAI_API_BASE"))
 service_context = ServiceContext.from_defaults(llm=llm)
-with open('../data/pdf.json', encoding="utf-8") as pdfdata:
+with open(os.environ.get("FILE_PATH"), encoding="utf-8") as pdfdata:
     data = json.load(pdfdata)
 query_engine = JSONQueryEngine(
     json_value=data,
@@ -163,7 +163,7 @@ def fetch_table(query):
   jsonpath_expression = parse(path)
   matches = jsonpath_expression.find(data)
   result = [match.value for match in matches]
-  print("table")
+  #print("table")
   table_indexs = get_table_num(query)
   table_indexs = ast.literal_eval(table_indexs)
   #content = [result[i] for i in table_indexs]
