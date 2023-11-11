@@ -108,9 +108,10 @@ dataschema = {
         "msg"
     ]
 }
-llm = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),api_base=os.environ.get("OPENAI_API_BASE"))
+llm = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), api_base=os.environ.get("OPENAI_API_BASE"))
 service_context = ServiceContext.from_defaults(llm=llm)
-with open(os.environ.get("FILE_PATH"), encoding="utf-8") as pdfdata:
+filePath = os.environ.get("FILE_PATH") if os.environ.get("FILE_PATH") else "./data/pdf.json"
+with open(filePath, encoding="utf-8") as pdfdata:
     data = json.load(pdfdata)
 query_engine = JSONQueryEngine(
     json_value=data,
@@ -132,7 +133,6 @@ def fetch_pages(query):
     prompt = f"Please answer a question based on something in the pdf\n, this is the question{query}\n, The contents of the pages mentioned in the question are listed in text as follows {content}"
     response = llm.complete(prompt)
     print(response)
-
 
 
 def fetch_sections(query):
@@ -157,26 +157,27 @@ def get_table_num(query):
   """
     response = llm.complete(prompt)
     return response.__str__()
+
+
 def fetch_table(query):
-  query_prompt = f"What contents mentioned in the table of this pdf"
-  path = query_engine.query(query_prompt).metadata['json_path_response_str'].replace("&&", "&")
-  jsonpath_expression = parse(path)
-  matches = jsonpath_expression.find(data)
-  result = [match.value for match in matches]
-  #print("table")
-  table_indexs = get_table_num(query)
-  table_indexs = ast.literal_eval(table_indexs)
-  #content = [result[i] for i in table_indexs]
-  content = [f'table{i}:{result[i]}' for i in table_indexs]
-  prompt = f"Please answer a question based on something in the pdf\n, this is the question{query}\n, The contents of  tables, mentioned in the question are listed in text as follows {content}"
-  response = llm.complete(prompt)
-  print(response)
+    query_prompt = f"What contents mentioned in the table of this pdf"
+    path = query_engine.query(query_prompt).metadata['json_path_response_str'].replace("&&", "&")
+    jsonpath_expression = parse(path)
+    matches = jsonpath_expression.find(data)
+    result = [match.value for match in matches]
+    # print("table")
+    table_indexs = get_table_num(query)
+    table_indexs = ast.literal_eval(table_indexs)
+    # content = [result[i] for i in table_indexs]
+    content = [f'table{i}:{result[i]}' for i in table_indexs]
+    prompt = f"Please answer a question based on something in the pdf\n, this is the question{query}\n, The contents of  tables, mentioned in the question are listed in text as follows {content}"
+    response = llm.complete(prompt)
+    print(response)
 
 
 def retrieve():
     print("retrieve")
 
 
-def pdf_response(query,content):
-  print("response")
-
+def pdf_response(query, content):
+    print("response")
