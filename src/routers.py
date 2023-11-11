@@ -1,7 +1,8 @@
 from llama_index.tools import ToolMetadata
 from llama_index.selectors.llm_selectors import LLMSingleSelector
-import os
-from .triage import fetch_figure,fetch_pages,fetch_sections,fetch_table,retrieve
+from .triage import fetch_figure, fetch_pages, fetch_sections, fetch_table, retrieve
+
+
 def router(query):
     choices = [
         ToolMetadata(description="Get the text contained in the pages listed", name="fetch_pages"),
@@ -13,7 +14,7 @@ def router(query):
     ]
 
     # choices as a list of strings
-    #choices = ["fetch_pages", "fetch_sections", "fetch_figure", "fetch_table", "retrieve"]
+    # choices = ["fetch_pages", "fetch_sections", "fetch_figure", "fetch_table", "retrieve"]
     selector = LLMSingleSelector.from_defaults()
     result = selector.select(choices, query=query).selections
     flag = result[0].index
