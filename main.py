@@ -3,5 +3,5 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 if __name__ == '__main__':
-    query = "What is the summary of the page 2"
+    query = "The second figure of the paper is mainly about related work"
     router(query=query)

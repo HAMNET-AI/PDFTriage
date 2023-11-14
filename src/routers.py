@@ -18,12 +18,13 @@ def router(query):
     selector = LLMSingleSelector.from_defaults()
     result = selector.select(choices, query=query).selections
     flag = result[0].index
+    print(flag)
     if flag == 0:
         content = fetch_pages(query=query)
     elif flag == 1:
         fetch_sections()
     elif flag == 2:
-        fetch_figure()
+        fetch_figure(query=query)
     elif flag == 3:
         fetch_table(query=query)
     elif flag == 4:

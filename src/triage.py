@@ -121,6 +121,22 @@ query_engine = JSONQueryEngine(
 )
 
 
+def get_num(query,type):
+    prompt = f"""Please indicate in an array form which {type}s are referred to in a question,You just need to output an array
+              example:
+              query : What is the summary of the contents of {type} 1
+              output : [1]
+              query : What is the summary of the contents of {type} 2 and 6" \
+              output : [2,6]
+              query : What is the summary of the contents of {type} 2 to 5" \
+              output : [2,3,4,5]
+              --------------------------------------------------------------\
+              this is the question {query} Please indicate in an array form which {type}s are referred
+  """
+    response = llm.complete(prompt)
+    return response.__str__()
+
+
 def fetch_pages(query):
     # print("pages")
     query_prompt = f"What contents to the number of pages mentioned in this question : {query}"
@@ -139,24 +155,20 @@ def fetch_sections(query):
     print("Fetching sections")
 
 
-def fetch_figure():
-    print("Fetching figure")
-
-
-def get_table_num(query):
-    prompt = f"""Please indicate in an array form which tables are referred to in a question
-              example:
-              query : What is the summary of the contents of table 1
-              output : [1]
-              query : What is the summary of the contents of table 2 and 6" \
-              output : [2,6]
-              query : What is the summary of the contents of table 2 to 5" \
-              output : [2,3,4,5]
-              --------------------------------------------------------------\
-              this is the question {query} Please indicate in an array form which tables are referred
-  """
+def fetch_figure(query):
+    query_prompt = f"What contents mentioned in the figure of this pdf"
+    path = query_engine.query(query_prompt).metadata['json_path_response_str'].replace("&&", "&")
+    jsonpath_expression = parse(path)
+    matches = jsonpath_expression.find(data)
+    result = [match.value for match in matches]
+    figure_indexs = get_num(query, type="figure")
+    print(figure_indexs)
+    figure_indexs = ast.literal_eval(figure_indexs)
+    content = [f'figure{i}:{result[i]}' for i in figure_indexs]
+    prompt = f"Please answer a question based on something in the pdf\n, this is the question{query}\n, The contents of figures, mentioned in the question are listed in text as follows {content}"
     response = llm.complete(prompt)
-    return response.__str__()
+    print(response)
+
 
 
 def fetch_table(query):
@@ -166,7 +178,7 @@ def fetch_table(query):
     matches = jsonpath_expression.find(data)
     result = [match.value for match in matches]
     # print("table")
-    table_indexs = get_table_num(query)
+    table_indexs = get_num(query,type="table")
     table_indexs = ast.literal_eval(table_indexs)
     # content = [result[i] for i in table_indexs]
     content = [f'table{i}:{result[i]}' for i in table_indexs]
