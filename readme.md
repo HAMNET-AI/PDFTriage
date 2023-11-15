@@ -2,7 +2,7 @@
 
 # PDFtriage
 
-PDFtriage 是一个开源项目，用于扫描和解析 PDF 文件，并提供查询功能。
+PDFtriage: 用于结构化文档问答的新方法，提供了基于结构和内容的上下文检索，解决了现有模型在处理结构化文档时的局限性
 
 ## Dependencies
 
