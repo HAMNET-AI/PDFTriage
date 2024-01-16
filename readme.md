@@ -1,6 +1,6 @@
 ## PDFTriage: Question Answering over Long, Structured Documents
 
-# PDFtriage
+#
 
 PDFtriage: 用于结构化文档问答的新方法，提供了基于结构和内容的上下文检索，解决了现有模型在处理结构化文档时的局限性
 
